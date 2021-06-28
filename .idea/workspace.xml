@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="PhpXdebugProxy" ide_key="PHPSTORM" />
+  <component name="PropertiesComponent">
+    <property name="settings.editor.selected.configurable" value="php.test.frameworks.configurable" />
+  </component>
+</project>
