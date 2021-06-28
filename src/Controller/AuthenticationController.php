@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use App\Enum\KeyCloakConfig;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -22,37 +24,47 @@ class AuthenticationController extends AbstractController
     }
 
     /**
-     * @Route("/authentication", name="authentication")
+     * @Route("/authToken", name="authToken")
      */
-    public function index(): ?Response
+    public function getAuthToken(Request $request): ?Response
     {
-        try {
-            $response = $this->httpClient->request(
-                "POST",
-                "http://localhost:8080/auth/realms/master/protocol/openid-connect/token",
-                [
-                    'headers' => [
-                        'Content-Type' => "application/x-www-form-urlencoded",
-                    ],
+        $requestObj = json_decode($request->getContent());
+        if ($requestObj !== null) {
+            $userName = $requestObj->username;
+            $password = $requestObj->password;
+            if (isset($userName) && isset($password)) {
+                try {
+                    $response = $this->httpClient->request(
+                        "POST",
+                        KeyCloakConfig::Key_Cloak_Base_Url . KeyCloakConfig::Key_Cloak_AuthToken_Url,
+                        [
+                            'headers' => [
+                                'Content-Type' => "application/x-www-form-urlencoded",
+                            ],
+                            'form_params' => [
+                                "grant_type" => KeyCloakConfig::Key_Cloak_Grant_Type,
+                                "client_id" => KeyCloakConfig::Key_Cloak_Rest_Client,
+                                "client_secret" => KeyCloakConfig::Key_Cloak_Client_Secret,
+                                "username" => $userName,
+                                "password" => $password]
+                        ]
+                    );
 
-                    'form_params' => ["grant_type" => "password",
-                        "client_id" => "rest-client",
-                        "client_secret" => "8cc68536-52a8-4cc1-a3fc-8448bed05b2d",
-                        "username" => "hexa",
-                        "password" => "hexa"]
-                ]
-            );
-
-            if ($response && $response->getStatusCode() === 200) {
-                $data = json_decode($response->getBody(), true);
-                return $this->json($data, Response::HTTP_CREATED, array(
-                    'Content-Type' => 'application/json',
-                ));
+                    if ($response && $response->getStatusCode() === 200) {
+                        $data = json_decode($response->getBody(), true);
+                        return $this->json($data, Response::HTTP_CREATED, array(
+                            'Content-Type' => 'application/json',
+                        ));
+                    }
+                    return null;
+                } catch (GuzzleException $e) {
+                    return $this->json($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR, array(
+                        'Content-Type' => 'application/json',
+                    ));
+                }
             }
-            return null;
-        } catch (GuzzleException $e) {
-            dump($e->getMessage());
-            return null;
         }
+        return $this->json("Error : username and password are required.", Response::HTTP_BAD_REQUEST);
     }
+
 }
