@@ -11,16 +11,22 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class RegisterationController extends AbstractController
+class RegistrationController extends AbstractController
 {
     /**
      * @var ClientInterface
      */
     private $httpClient;
 
-    public function __construct()
+    /**
+     * @var PasswordController
+     */
+    private $password;
+
+    public function __construct(PasswordController $password)
     {
         $this->httpClient = new Client(['timeout' => 3]);
+        $this->password = $password;
     }
 
     /**
@@ -50,6 +56,9 @@ class RegisterationController extends AbstractController
 
                 if ($response && $response->getStatusCode() === 201) {
                     $data = json_decode($response->getBody(), true);
+                    $setPasswordUrl = $response->getHeader("Location")[0];
+
+                    $this->password->updatePassword($setPasswordUrl, $requestObj->password, $authorization);
 
                     return $this->json($data, Response::HTTP_CREATED, array(
                         'Content-Type' => 'application/json',
