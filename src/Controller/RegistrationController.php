@@ -32,7 +32,7 @@ class RegistrationController extends AbstractController
     /**
      * @Route("/registration", name="registration")
      */
-    public function registerNewUser(Request $request): ?Response
+    public function registerNewUser(Request $request): Response
     {
         $requestObj = json_decode($request->getContent());
         $authorization = $request->headers->get('Authorization');

@@ -24,7 +24,7 @@ class PasswordController extends AbstractController
         $this->httpClient = new Client(['timeout' => 3]);
     }
 
-    public function updatePassword($url, $passwordToUpdate, $authorization): ?Response
+    public function updatePassword($url, $passwordToUpdate, $authorization): Response
     {
 
         try {
@@ -53,6 +53,8 @@ class PasswordController extends AbstractController
                 'Content-Type' => 'application/json',
             ));
         }
+
+        return $this->json("Error ", Response::HTTP_BAD_REQUEST);
     }
 
 }

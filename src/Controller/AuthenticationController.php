@@ -24,9 +24,10 @@ class AuthenticationController extends AbstractController
     }
 
     /**
+     * @param Request $request
      * @Route("/authToken", name="authToken")
      */
-    public function getAuthToken(Request $request): ?Response
+    public function getAuthToken(Request $request): Response
     {
         $requestObj = json_decode($request->getContent());
         if ($requestObj !== null) {
@@ -56,7 +57,7 @@ class AuthenticationController extends AbstractController
                             'Content-Type' => 'application/json',
                         ));
                     }
-                    return null;
+
                 } catch (GuzzleException $e) {
                     return $this->json($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR, array(
                         'Content-Type' => 'application/json',
