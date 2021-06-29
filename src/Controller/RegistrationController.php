@@ -57,8 +57,7 @@ class RegistrationController extends AbstractController
                 if ($response && $response->getStatusCode() === 201) {
                     $data = json_decode($response->getBody(), true);
                     $setPasswordUrl = $response->getHeader("Location")[0];
-
-                    $this->password->updatePassword($setPasswordUrl, $requestObj->password, $authorization);
+                    $passwordUpdateResult = $this->password->updatePassword($setPasswordUrl, $requestObj->password, $authorization);
 
                     return $this->json($data, Response::HTTP_CREATED, array(
                         'Content-Type' => 'application/json',
