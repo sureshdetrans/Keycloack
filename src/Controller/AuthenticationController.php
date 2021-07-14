@@ -18,9 +18,15 @@ class AuthenticationController extends AbstractController
      */
     private $httpClient;
 
-    public function __construct()
+    /**
+     * @var KeycloakConnectClientAdapter
+     */
+    private $keycloakConnectClientAdapter;
+
+    public function __construct(KeycloakConnectClientAdapter $keycloakConnectClientAdapter)
     {
         $this->httpClient = new Client(['timeout' => 3]);
+        $this->keycloakConnectClientAdapter = $keycloakConnectClientAdapter;
     }
 
     /**
@@ -30,41 +36,16 @@ class AuthenticationController extends AbstractController
     public function getAuthToken(Request $request): Response
     {
         $requestObj = json_decode($request->getContent());
+
         if ($requestObj !== null) {
             $userName = $requestObj->username;
             $password = $requestObj->password;
-            if (isset($userName) && isset($password)) {
-                try {
-                    $response = $this->httpClient->request(
-                        "POST",
-                        KeyCloakConfig::Key_Cloak_Base_Url . KeyCloakConfig::Key_Cloak_AuthToken_Url,
-                        [
-                            'headers' => [
-                                'Content-Type' => "application/x-www-form-urlencoded",
-                            ],
-                            'form_params' => [
-                                "grant_type" => KeyCloakConfig::Key_Cloak_Grant_Type,
-                                "client_id" => KeyCloakConfig::Key_Cloak_Rest_Client,
-                                "client_secret" => KeyCloakConfig::Key_Cloak_Client_Secret,
-                                "username" => $userName,
-                                "password" => $password]
-                        ]
-                    );
-
-                    if ($response && $response->getStatusCode() === 200) {
-                        $data = json_decode($response->getBody(), true);
-                        return $this->json($data, Response::HTTP_CREATED, array(
-                            'Content-Type' => 'application/json',
-                        ));
-                    }
-
-                } catch (GuzzleException $e) {
-                    return $this->json($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR, array(
-                        'Content-Type' => 'application/json',
-                    ));
-                }
-            }
+            $data = $this->keycloakConnectClientAdapter->authenticate($userName, $password);
+            return $this->json($data, Response::HTTP_CREATED, array(
+                'Content-Type' => 'application/json',
+            ));
         }
+
         return $this->json("Error : username and password are required.", Response::HTTP_BAD_REQUEST);
     }
 
