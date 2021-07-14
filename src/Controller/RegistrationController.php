@@ -23,10 +23,16 @@ class RegistrationController extends AbstractController
      */
     private $password;
 
-    public function __construct(PasswordController $password)
+    /**
+     * @var KeycloakConnectClientAdapter
+     */
+    private $keycloakConnectClientAdapter;
+
+    public function __construct(PasswordController $password, KeycloakConnectClientAdapter $keycloakConnectClientAdapter)
     {
         $this->httpClient = new Client(['timeout' => 3]);
         $this->password = $password;
+        $this->keycloakConnectClientAdapter = $keycloakConnectClientAdapter;
     }
 
     /**
@@ -42,27 +48,11 @@ class RegistrationController extends AbstractController
                 $data = json_encode(['enabled' => true, 'username' => $requestObj->username, 'emailVerified' => $requestObj->emailVerified,
                     'email' => $requestObj->email, 'firstName' => $requestObj->firstName, 'lastName' => $requestObj->lastName]);
 
-                $response = $this->httpClient->request(
-                    "POST",
-                    KeyCloakConfig::Key_Cloak_Base_Url . KeyCloakConfig::Key_Cloak_Register_User,
-                    [
-                        'headers' => [
-                            'Authorization' => $authorization,
-                            'Content-Type' => "application/json",
-                        ],
-                        'body' => $data
-                    ]
-                );
+                $data = $this->keycloakConnectClientAdapter->register($authorization, $data);
 
-                if ($response && $response->getStatusCode() === 201) {
-                    $data = json_decode($response->getBody(), true);
-                    $setPasswordUrl = $response->getHeader("Location")[0];
-                    $passwordUpdateResult = $this->password->updatePassword($setPasswordUrl, $requestObj->password, $authorization);
-
-                    return $this->json($data, Response::HTTP_CREATED, array(
-                        'Content-Type' => 'application/json',
-                    ));
-                }
+                return $this->json($data, Response::HTTP_CREATED, array(
+                    'Content-Type' => 'application/json',
+                ));
 
             } catch (GuzzleException $e) {
                 return $this->json($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR, array(
@@ -72,6 +62,5 @@ class RegistrationController extends AbstractController
         }
 
         return $this->json("Error ", Response::HTTP_BAD_REQUEST);
-
     }
 }

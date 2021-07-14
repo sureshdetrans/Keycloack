@@ -127,16 +127,11 @@ class KeycloakConnectClientAdapter
      */
     public function register($authorization, $data)
     {
-
         $registrationEndpoint = $this->providerConfigValue->getKeyCloakBaseUrl() . $this->providerConfigValue->getKeyCloakRegisterUser();
-
         // Accept json to indicate response type
         $headers = ["Authorization: " . $authorization];
-
         //  Convert token params to string format
-        //  $postData = http_build_query($data, null, '&', $this->enc_type);
-        return json_decode($this->fetchResponse($registrationEndpoint, json_encode($data), $headers));
-
+        return json_decode($this->fetchResponse($registrationEndpoint, $data, $headers));
     }
 
     /**
@@ -274,7 +269,6 @@ class KeycloakConnectClientAdapter
 
         // HTTP Response code from server may be required from subclass
         $info = curl_getinfo($ch);
-        var_dump('Curl error: (' . curl_errno($ch) . ') ' . curl_error($ch));
 
         if ($output === false) {
             throw new ClientException('Curl error: (' . curl_errno($ch) . ') ' . curl_error($ch));
