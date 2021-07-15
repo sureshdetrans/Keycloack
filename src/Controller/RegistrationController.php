@@ -46,7 +46,7 @@ class RegistrationController extends AbstractController
         if ($authorization !== null && $requestObj !== null) {
             try {
                 $data = json_encode(['enabled' => true, 'username' => $requestObj->username, 'emailVerified' => $requestObj->emailVerified,
-                    'email' => $requestObj->email, 'firstName' => $requestObj->firstName, 'lastName' => $requestObj->lastName]);
+                    'email' => $requestObj->email, 'firstName' => $requestObj->firstName, 'lastName' => $requestObj->lastName, "attributes" => $requestObj->attributes]);
 
                 $data = $this->keycloakConnectClientAdapter->register($authorization, $data);
 
